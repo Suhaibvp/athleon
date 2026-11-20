@@ -27,7 +27,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _ensureCode() async {
-    if (RoomSync.instance.code == null) await RoomSync.instance.create();
+    if (RoomSync.instance.code == null) {
+      await RoomSync.instance.create();
+    } else {
+      await RoomSync.instance.publish(bg: 'white', showLogo: true);
+    }
     if (mounted) setState(() {});
   }
 

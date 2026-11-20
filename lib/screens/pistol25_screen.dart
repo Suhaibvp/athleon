@@ -6,22 +6,7 @@ import '../board.dart';
 import '../services/saved_times.dart';
 import '../widgets/board_widgets.dart';
 
-enum _Step {
-  idle,
-  prep,
-  sighting,
-  attentionToStart,
-  start,
-  stop,
-  unloadToSeries,
-  series,
-  attentionAfterSeries,
-  unloadToMalfunction,
-  malfunction,
-  attentionAfterMalfunction,
-  unloadToProve,
-  prove,
-}
+enum _Step { idle, prep, sighting, attentionToStart, unloadToSeries, series, prove }
 
 class Pistol25Screen extends StatefulWidget {
   const Pistol25Screen({super.key});
@@ -34,20 +19,15 @@ class _Pistol25ScreenState extends State<Pistol25Screen> {
   static const _key = 'pistol25_flow';
   static const _sightingSeconds = 60;
   static const _attentionSeconds = 7;
-  static const _stopSeconds = 5;
-  static const _unloadSeconds = 10;
+  static const _unloadSeconds = 60;
 
   final DisplayBoard _board = DisplayBoard();
   final _prepMin = TextEditingController();
   final _prepSec = TextEditingController();
-  final _startMin = TextEditingController();
-  final _startSec = TextEditingController();
   final _seriesMin = TextEditingController();
   final _seriesSec = TextEditingController();
-  final _malMin = TextEditingController();
-  final _malSec = TextEditingController();
 
-  List<int> _saved = [0, 0, 0, 0];
+  List<int> _saved = [0, 0];
   _Step _step = _Step.idle;
   bool _busy = false;
   bool _warnOn = true;
@@ -66,12 +46,10 @@ class _Pistol25ScreenState extends State<Pistol25Screen> {
   bool get _configured => _saved.every((value) => value > 0);
 
   int get _prepSeconds => _saved[0];
-  int get _startSeconds => _saved[1];
-  int get _seriesSeconds => _saved[2];
-  int get _malSeconds => _saved[3];
+  int get _seriesSeconds => _saved[1];
 
   Future<void> _load() async {
-    final values = await SavedTimes.ints(_key, [0, 0, 0, 0]);
+    final values = await SavedTimes.ints(_key, [0, 0]);
     if (!mounted) return;
     setState(() => _saved = values);
     _fillControllers(values);
@@ -81,9 +59,7 @@ class _Pistol25ScreenState extends State<Pistol25Screen> {
 
   void _fillControllers(List<int> values) {
     _writeClock(_prepMin, _prepSec, values[0]);
-    _writeClock(_startMin, _startSec, values[1]);
-    _writeClock(_seriesMin, _seriesSec, values[2]);
-    _writeClock(_malMin, _malSec, values[3]);
+    _writeClock(_seriesMin, _seriesSec, values[1]);
   }
 
   void _writeClock(TextEditingController minutes, TextEditingController seconds, int total) {
@@ -134,26 +110,11 @@ class _Pistol25ScreenState extends State<Pistol25Screen> {
       case _Step.sighting:
         _beginAttention(_Step.attentionToStart);
       case _Step.attentionToStart:
-        _beginStart();
-      case _Step.start:
-        _beginStop();
-      case _Step.stop:
-        _beginUnload(_Step.unloadToSeries);
+        _board.showBlank(BoardColors.green);
       case _Step.unloadToSeries:
-        _beginSeries();
-      case _Step.series:
-        _beginAttention(_Step.attentionAfterSeries);
-      case _Step.attentionAfterSeries:
-        _beginUnload(_Step.unloadToMalfunction);
-      case _Step.unloadToMalfunction:
-        _beginMalfunction();
-      case _Step.malfunction:
-        _beginAttention(_Step.attentionAfterMalfunction);
-      case _Step.attentionAfterMalfunction:
-        _beginUnload(_Step.unloadToProve);
-      case _Step.unloadToProve:
-        _showProve();
+        _board.showBlank(BoardColors.red);
       case _Step.idle:
+      case _Step.series:
       case _Step.prove:
         break;
     }
@@ -163,9 +124,9 @@ class _Pistol25ScreenState extends State<Pistol25Screen> {
     _board.showText(text, background: background);
   }
 
-  void _count(String text, int seconds, _Step step, {Color background = BoardColors.yellow}) {
+  void _count(String text, int seconds, _Step step, {Color background = BoardColors.yellow, Color? foreground}) {
     _step = step;
-    _board.startTimer(text, seconds, 'no_blink', background: background);
+    _board.startTimer(text, seconds, 'no_blink', background: background, foreground: foreground);
   }
 
   bool _guardTimed() {
@@ -176,12 +137,12 @@ class _Pistol25ScreenState extends State<Pistol25Screen> {
 
   void _beginPrep() {
     if (!_guardTimed()) return;
-    _count('PREPARATION TIME BEGINS NOW', _prepSeconds, _Step.prep);
+    _count('PREPARATION TIME BEGINS NOW', _prepSeconds, _Step.prep, background: BoardColors.orange);
   }
 
   void _beginSighting() {
     if (!_guardTimed()) return;
-    _count('FOR THE SIGHTING SERIES - LOAD', _sightingSeconds, _Step.sighting);
+    _count('SIGHTING SERIES LOAD', _sightingSeconds, _Step.sighting);
   }
 
   void _beginAttention(_Step step) {
@@ -189,19 +150,9 @@ class _Pistol25ScreenState extends State<Pistol25Screen> {
     _count('ATTENTION', _attentionSeconds, step, background: BoardColors.red);
   }
 
-  void _beginStart() {
+  void _beginUnload() {
     if (!_guardTimed()) return;
-    _count('START', _startSeconds, _Step.start);
-  }
-
-  void _beginStop() {
-    if (!_guardTimed()) return;
-    _count('STOP', _stopSeconds, _Step.stop);
-  }
-
-  void _beginUnload(_Step step) {
-    if (!_guardTimed()) return;
-    _count('UNLOAD', _unloadSeconds, step);
+    _count('UNLOAD', _unloadSeconds, _Step.unloadToSeries, background: BoardColors.red, foreground: Colors.white);
   }
 
   void _beginSeries() {
@@ -210,13 +161,13 @@ class _Pistol25ScreenState extends State<Pistol25Screen> {
   }
 
   void _beginMalfunction() {
-    if (!_guardTimed()) return;
-    _count('FOR THE MALFUNCTION SERIES – LOAD', _malSeconds, _Step.malfunction);
+    _step = _Step.idle;
+    _board.showText('MALFUNCTION', background: BoardColors.red);
   }
 
   void _showProve() {
     _step = _Step.prove;
-    _show('This relay has ended. PROVE PISTOL');
+    _show('END OF RELAY');
   }
 
   void _reset() {
@@ -238,11 +189,7 @@ class _Pistol25ScreenState extends State<Pistol25Screen> {
             children: [
               TimePair(label: 'PREPARATION', minutes: _prepMin, seconds: _prepSec),
               const SizedBox(height: 12),
-              TimePair(label: 'START', minutes: _startMin, seconds: _startSec),
-              const SizedBox(height: 12),
               TimePair(label: 'NEXT COMPETITION SERIES', minutes: _seriesMin, seconds: _seriesSec),
-              const SizedBox(height: 12),
-              TimePair(label: 'MALFUNCTION SERIES', minutes: _malMin, seconds: _malSec),
             ],
           ),
         ),
@@ -267,9 +214,7 @@ class _Pistol25ScreenState extends State<Pistol25Screen> {
     }
     final next = [
       _readClock(_prepMin, _prepSec),
-      _readClock(_startMin, _startSec),
       _readClock(_seriesMin, _seriesSec),
-      _readClock(_malMin, _malSec),
     ];
     if (next.any((value) => value <= 0)) {
       _fillControllers(_saved);
@@ -288,12 +233,8 @@ class _Pistol25ScreenState extends State<Pistol25Screen> {
     _board.dispose();
     _prepMin.dispose();
     _prepSec.dispose();
-    _startMin.dispose();
-    _startSec.dispose();
     _seriesMin.dispose();
     _seriesSec.dispose();
-    _malMin.dispose();
-    _malSec.dispose();
     super.dispose();
   }
 
@@ -323,7 +264,7 @@ class _Pistol25ScreenState extends State<Pistol25Screen> {
                 ),
               ),
             ),
-          Expanded(child: Center(child: CueText(text: _board.text, seconds: _board.seconds))),
+          Expanded(child: Center(child: CueText(text: _board.text, seconds: _board.seconds, color: _board.textColor))),
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
             child: Wrap(
@@ -333,18 +274,16 @@ class _Pistol25ScreenState extends State<Pistol25Screen> {
               children: [
                 _button('ATHLETE TO THE LINE', () {
                   _step = _Step.idle;
-                  _show('Athlete to the line');
+                  _board.showText('ATHLETE TO THE LINE', background: BoardColors.red, foreground: Colors.white);
                 }),
-                _button('UNBOX & HANDLE', () {
+                _button('UNBOX AND HANDLE', () {
                   _step = _Step.idle;
-                  _show('You can unbox & handle your Pistols. Safety flags must be inserted in the pistols. Holding & Aiming exercise is allowed.');
+                  _board.showText('UNBOX AND HANDLE', background: BoardColors.orange);
                 }),
                 _button('PREPARATION TIME', _beginPrep),
                 _button('SIGHTING SERIES LOAD', _beginSighting),
                 _button('ATTENTION', () => _beginAttention(_Step.attentionToStart)),
-                _button('START', _beginStart),
-                _button('STOP', _beginStop),
-                _button('UNLOAD', () => _beginUnload(_Step.unloadToSeries)),
+                _button('UNLOAD', _beginUnload),
                 _button('FIRST COMPETITION SERIES LOAD', () {
                   _step = _Step.idle;
                   _show('FOR THE FIRST COMPETITION SERIES – LOAD');

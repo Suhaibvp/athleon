@@ -36,9 +36,13 @@ class RoomSync {
   Future<void> publish({
     required String bg,
     String text = '',
+    String foreground = 'black',
     int? seconds,
     String blink = 'none',
     bool showLogo = false,
+    bool blank = false,
+    String clock = 'ms',
+    String weight = 'normal',
   }) async {
     final doc = _doc;
     if (doc == null) return;
@@ -46,9 +50,13 @@ class RoomSync {
       await doc.set({
         'bg': bg,
         'text': text,
+        'fg': foreground,
         'seconds': seconds,
         'blink': blink,
         'showLogo': showLogo,
+        'blank': blank,
+        'clock': clock,
+        'weight': weight,
         'updatedAt': DateTime.now().millisecondsSinceEpoch,
       });
     } catch (_) {}

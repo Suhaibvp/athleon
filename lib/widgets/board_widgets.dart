@@ -127,12 +127,14 @@ class CommandButton extends StatelessWidget {
     required this.onPressed,
     this.enabled = true,
     this.expand = true,
+    this.weight = FontWeight.w600,
   });
 
   final String label;
   final VoidCallback onPressed;
   final bool enabled;
   final bool expand;
+  final FontWeight weight;
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +149,7 @@ class CommandButton extends StatelessWidget {
             disabledBackgroundColor: const Color(0x80000000),
             minimumSize: const Size(100, 52),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            textStyle: TextStyle(fontSize: 16, fontWeight: weight),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
           child: Text(label, textAlign: TextAlign.center, maxLines: 4),
@@ -174,10 +176,20 @@ Route<void> slidePage(Widget page) {
 }
 
 class CueText extends StatefulWidget {
-  const CueText({super.key, this.text, this.seconds});
+  const CueText({
+    super.key,
+    this.text,
+    this.seconds,
+    this.color = Colors.black,
+    this.hours = false,
+    this.weight = FontWeight.w600,
+  });
 
   final String? text;
   final int? seconds;
+  final Color color;
+  final bool hours;
+  final FontWeight weight;
 
   @override
   State<CueText> createState() => _CueTextState();
@@ -208,16 +220,33 @@ class _CueTextState extends State<CueText> {
           ),
         );
       },
-      child: _CueBody(key: ValueKey<String>(widget.text ?? ''), text: widget.text, seconds: widget.seconds),
+      child: _CueBody(
+        key: ValueKey<String>(widget.text ?? ''),
+        text: widget.text,
+        seconds: widget.seconds,
+        color: widget.color,
+        hours: widget.hours,
+        weight: widget.weight,
+      ),
     );
   }
 }
 
 class _CueBody extends StatelessWidget {
-  const _CueBody({super.key, this.text, this.seconds});
+  const _CueBody({
+    super.key,
+    this.text,
+    this.seconds,
+    this.color = Colors.black,
+    this.hours = false,
+    this.weight = FontWeight.w600,
+  });
 
   final String? text;
   final int? seconds;
+  final Color color;
+  final bool hours;
+  final FontWeight weight;
 
   @override
   Widget build(BuildContext context) {
@@ -231,9 +260,9 @@ class _CueBody extends StatelessWidget {
           line,
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: Colors.black,
+            color: color,
             fontSize: time == null ? 100 : 100,
-            fontWeight: FontWeight.w600,
+            fontWeight: weight,
             height: 1.1,
           ),
         ),
@@ -243,12 +272,12 @@ class _CueBody extends StatelessWidget {
       if (children.isNotEmpty) children.add(const SizedBox(height: 20));
       children.add(
         Text(
-          formatClock(time),
+          formatClock(time, hours: hours),
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: Colors.black,
+            color: color,
             fontSize: line == null || line.isEmpty ? 250 : 150,
-            fontWeight: FontWeight.w600,
+            fontWeight: weight,
           ),
         ),
       );

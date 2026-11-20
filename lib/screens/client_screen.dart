@@ -115,15 +115,21 @@ class _ClientViewState extends State<ClientView> {
   String? _error;
   Timer? _blink;
   bool _green = true;
+  late final int _joinedAt;
 
   @override
   void initState() {
     super.initState();
+    _joinedAt = DateTime.now().millisecondsSinceEpoch;
     _sub = FirebaseFirestore.instance.collection('displayRooms').doc(widget.code).snapshots().listen(
       (snapshot) {
         if (!mounted) return;
+        final data = snapshot.data();
+        final rawUpdated = data?['updatedAt'];
+        final updatedAt = rawUpdated is num ? rawUpdated.toInt() : 0;
+        if (updatedAt <= _joinedAt) return;
         setState(() {
-          _data = snapshot.data();
+          _data = data;
           _error = null;
         });
         _syncBlink();
@@ -141,7 +147,7 @@ class _ClientViewState extends State<ClientView> {
     final blink = data['blink'] as String? ?? 'none';
     final rawSeconds = data['seconds'];
     final seconds = rawSeconds is num ? rawSeconds.toInt() : null;
-    return blink != 'none' && seconds != null && seconds <= 30 && seconds > 0;
+    return blink != 'none' && seconds != null && seconds > 0;
   }
 
   void _syncBlink() {
@@ -170,7 +176,11 @@ class _ClientViewState extends State<ClientView> {
     final text = data?['text'] as String? ?? '';
     final rawSeconds = data?['seconds'];
     final seconds = rawSeconds is num ? rawSeconds.toInt() : null;
-    final showLogo = data == null || (text.isEmpty && seconds == null);
+    final blank = data?['blank'] == true;
+    final showLogo = !blank && (data == null || (text.isEmpty && seconds == null));
+    final cueColor = data?['fg'] == 'white' ? Colors.white : Colors.black;
+    final hours = data?['clock'] == 'hms';
+    final weight = data?['weight'] == 'heavy' ? FontWeight.w900 : FontWeight.w600;
     var color = BoardColors.fromName(data?['bg'] as String? ?? 'white');
     if (_shouldBlink) {
       final kind = data?['blink'] as String? ?? 'none';
@@ -201,7 +211,7 @@ class _ClientViewState extends State<ClientView> {
                   ? Text(_error!, style: const TextStyle(fontSize: 24))
                   : showLogo
                   ? Image.asset('assets/logo_inactive.jpeg', fit: BoxFit.contain)
-                  : CueText(text: text, seconds: seconds),
+                  : CueText(text: text, seconds: seconds, color: cueColor, hours: hours, weight: weight),
             ),
           ),
         ],

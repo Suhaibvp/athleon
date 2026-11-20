@@ -46,9 +46,9 @@ class _AirFinalScreenState extends State<AirFinalScreen> {
               alignment: WrapAlignment.center,
               children: [
                 _button('TAKE YOUR POSITIONS', () => _board.showText('TAKE YOUR POSITIONS', background: BoardColors.red)),
-                _button('Preparation & Sighting', () => _board.startTimer('PREPARATION & SIGHTING TIME', 300, 'set_time')),
+                _button('Preparation & Sighting', () => _board.startTimer('PREPARATION & SIGHTING TIME', 300, 'no_blink')),
                 _button('Competition Series.. LOAD', () => _board.showLoad('COMPETITION SERIES...\nLOAD')),
-                _button('Competition Series.. Start', () => _board.startTimer('START', 250, 'set_time')),
+                _button('Competition Series.. Start', () => _board.startTimer('START', 250, 'no_blink')),
                 _button('Competition Shot.. LOAD', () => _board.showLoad('COMPETITION SHOT...\nLOAD')),
                 _button('Competition Shot.. Start', () => _board.startTimer('START', 50, 'no_blink')),
                 _button(running ? 'Stop' : 'Resume', _board.togglePause, enabled: _board.seconds != null),

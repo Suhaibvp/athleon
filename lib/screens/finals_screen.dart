@@ -137,7 +137,7 @@ class _FinalsScreenState extends State<FinalsScreen> {
                     CommandButton(
                       label: 'PREPARATION &SIGHTING',
                       enabled: _board.timesReady && _prep != null,
-                      onPressed: () => _board.startTimer('PREPARATION &SIGHTING', parseClock(_prep!), 'preparation'),
+                      onPressed: () => _board.startTimer('PREPARATION &SIGHTING', parseClock(_prep!), 'no_blink'),
                     ),
                   ],
                 ),
@@ -145,12 +145,12 @@ class _FinalsScreenState extends State<FinalsScreen> {
                 Row(
                   children: [
                     CommandButton(
-                      label: 'FOR NEXT COMPETITION SERIES LOAD',
-                      onPressed: () => _board.showLoad('FOR NEXT COMPETITION SERIES LOAD'),
-                    ),
-                    CommandButton(
                       label: 'FIRST COMPETITION SERIES LOAD',
                       onPressed: () => _board.showLoad('FIRST COMPETITION SERIES LOAD'),
+                    ),
+                    CommandButton(
+                      label: 'FOR NEXT COMPETITION SERIES LOAD',
+                      onPressed: () => _board.showLoad('FOR NEXT COMPETITION SERIES LOAD'),
                     ),
                   ],
                 ),
@@ -167,7 +167,7 @@ class _FinalsScreenState extends State<FinalsScreen> {
                     CommandButton(
                       label: 'START',
                       enabled: _setSeconds != null,
-                      onPressed: () => _board.startTimer('', _setSeconds!, 'set_time'),
+                      onPressed: () => _board.startTimer('', _setSeconds!, 'no_blink'),
                     ),
                   ],
                 ),
@@ -180,7 +180,7 @@ class _FinalsScreenState extends State<FinalsScreen> {
                       onPressed: () => _board.startTimer(
                         'CHANGE OVER AND SIGHTING TIME',
                         parseClock(_change!),
-                        'change_over',
+                        'no_blink',
                       ),
                     ),
                     CommandButton(

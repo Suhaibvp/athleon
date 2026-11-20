@@ -15,6 +15,7 @@ class RifleScreen extends StatefulWidget {
 class _RifleScreenState extends State<RifleScreen> {
   final DisplayBoard _board = DisplayBoard();
   int _matchSeconds = 600;
+  final _hours = TextEditingController(text: '0');
   final _minutes = TextEditingController(text: '10');
   final _seconds = TextEditingController(text: '00');
 
@@ -22,6 +23,7 @@ class _RifleScreenState extends State<RifleScreen> {
   void initState() {
     super.initState();
     _board.addListener(() => setState(() {}));
+    _board.heavy = true;
     _board.logicalBg = BoardColors.red;
     _board.paintBg = BoardColors.red;
     _board.publish();
@@ -30,6 +32,7 @@ class _RifleScreenState extends State<RifleScreen> {
   @override
   void dispose() {
     _board.dispose();
+    _hours.dispose();
     _minutes.dispose();
     _seconds.dispose();
     super.dispose();
@@ -42,7 +45,9 @@ class _RifleScreenState extends State<RifleScreen> {
         title: const Text('Match time'),
         content: Row(
           children: [
-            Expanded(child: TextField(controller: _minutes, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Minute'), inputFormatters: [FilteringTextInputFormatter.digitsOnly])),
+            Expanded(child: TextField(controller: _hours, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Hour'), inputFormatters: [FilteringTextInputFormatter.digitsOnly])),
+            const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text(':')),
+            Expanded(child: TextField(controller: _minutes, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Minute'), inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(2)])),
             const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text(':')),
             Expanded(child: TextField(controller: _seconds, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Second'), inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(2)])),
           ],
@@ -54,9 +59,10 @@ class _RifleScreenState extends State<RifleScreen> {
       ),
     );
     if (saved != true) return;
+    final hours = int.tryParse(_hours.text) ?? 0;
     final minutes = int.tryParse(_minutes.text) ?? 0;
     final seconds = int.tryParse(_seconds.text) ?? 0;
-    setState(() => _matchSeconds = minutes * 60 + seconds);
+    setState(() => _matchSeconds = hours * 3600 + minutes * 60 + seconds);
   }
 
   @override
@@ -70,7 +76,17 @@ class _RifleScreenState extends State<RifleScreen> {
             onBack: () => Navigator.of(context).pop(),
             trailing: IconButton(tooltip: 'Match time', onPressed: _editMatch, icon: const Icon(Icons.settings, size: 30)),
           ),
-          Expanded(child: Center(child: CueText(text: _board.text, seconds: _board.seconds))),
+          Expanded(
+            child: Center(
+              child: CueText(
+                text: _board.text,
+                seconds: _board.seconds,
+                color: _board.textColor,
+                hours: _board.mode == 'match',
+                weight: FontWeight.w900,
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
             child: Wrap(
@@ -78,11 +94,11 @@ class _RifleScreenState extends State<RifleScreen> {
               runSpacing: 12,
               alignment: WrapAlignment.center,
               children: [
-                _button('Athletes to the Line', () => _board.showText('ATHLETES TO THE LINE', background: BoardColors.red)),
-                _button('Preparation and Sighting', () => _board.startTimer('PREPARATION & SIGHTING TIME', 900, 'set_time')),
-                _button('Match Firing', () => _board.startTimer('MATCH FIRING\nSTART', _matchSeconds, 'set_time')),
-                _button(running ? 'Stop' : 'Resume', _board.togglePause, enabled: _board.seconds != null),
-                _button('Reset', _board.reset),
+                _button('ATHLETES TO THE LINE', () => _board.showText('ATHLETES TO THE LINE', background: BoardColors.red)),
+                _button('PREPARATION AND SIGHTING', () => _board.startTimer('PREPARATION & SIGHTING TIME', 900, 'prep')),
+                _button('MATCH FIRING', () => _board.startTimer('MATCH FIRING\nSTART', _matchSeconds, 'match')),
+                _button(running ? 'STOP' : 'RESUME', _board.togglePause, enabled: _board.seconds != null),
+                _button('RESET', _board.reset),
               ],
             ),
           ),
@@ -92,6 +108,6 @@ class _RifleScreenState extends State<RifleScreen> {
   }
 
   Widget _button(String label, VoidCallback onPressed, {bool enabled = true}) {
-    return SizedBox(width: 240, child: CommandButton(label: label, onPressed: onPressed, enabled: enabled, expand: false));
+    return SizedBox(width: 240, child: CommandButton(label: label, onPressed: onPressed, enabled: enabled, expand: false, weight: FontWeight.w900));
   }
 }
